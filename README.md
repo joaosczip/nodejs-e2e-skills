@@ -1,14 +1,32 @@
 # nodejs-e2e-skills
 
-`nodejs-e2e-skills` is a repository of reusable `skills` for coding agents.
+`nodejs-e2e-skills` is a documentation-first repository of reusable skills for coding agents working on Node.js end-to-end testing.
 
-Its intention is simple: give agents a practical skill set for end-to-end testing in Node.js projects.
+## What this repository provides
 
-These skills are meant to help agents:
+- Practical `SKILL.md` playbooks for common e2e testing scenarios.
+- Service-specific references with copy-paste-ready examples.
+- Consistent patterns for setup, teardown, assertions, and troubleshooting.
 
-- set up and run E2E tests
-- write stable, maintainable test flows
-- handle common testing concerns (auth, fixtures, test data, CI)
-- debug failures and improve reliability over time
+## Available skills
 
-In short, this project is a focused knowledge base for Node.js E2E testing workflows that agents can apply consistently.
+### `testcontainers-e2e`
+
+Path: `skills/testcontainers/SKILL.md`
+
+Helps agents design reliable JS/TS backend e2e suites using Testcontainers with:
+
+- Fundamentals: containers, images, networking, compose, logging.
+- Service modules: LocalStack, MinIO, MySQL, NATS, PostgreSQL, RabbitMQ, Redis.
+- Suite lifecycle examples (`beforeAll`, `afterAll`, runtime config wiring, expectations).
+
+## Repository structure
+
+- `README.md`: high-level overview and skill index.
+- `skills/<skill-name>/SKILL.md`: canonical instructions for one skill.
+- `skills/<skill-name>/references/*.md`: focused references and implementation examples.
+
+## Notes
+
+- This repo currently has no runnable Node.js app.
+- Examples are designed to be adapted into downstream projects.
