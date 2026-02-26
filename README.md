@@ -2,6 +2,38 @@
 
 `nodejs-e2e-skills` is a documentation-first repository of reusable skills for coding agents working on Node.js end-to-end testing.
 
+You can download a specific skill directly from GitHub with `curl` and `tar`.
+
+## Download a skill from GitHub
+
+From your project root, run:
+
+```bash
+mkdir -p ./skills && \
+curl -L "https://codeload.github.com/joaosczip/nodejs-e2e-skills/tar.gz/refs/heads/main" | \
+tar -xz -C ./skills --strip-components=2 "nodejs-e2e-skills-main/skills/testcontainers"
+```
+
+This downloads only `skills/testcontainers` into `./skills/testcontainers`.
+
+To choose the skill with a variable:
+
+```bash
+SKILL="testcontainers"
+mkdir -p ./skills && \
+curl -L "https://codeload.github.com/joaosczip/nodejs-e2e-skills/tar.gz/refs/heads/main" | \
+tar -xz -C ./skills --strip-components=2 "nodejs-e2e-skills-main/skills/${SKILL}"
+```
+
+To replace an existing local copy first:
+
+```bash
+rm -rf ./skills/testcontainers && \
+mkdir -p ./skills && \
+curl -L "https://codeload.github.com/joaosczip/nodejs-e2e-skills/tar.gz/refs/heads/main" | \
+tar -xz -C ./skills --strip-components=2 "nodejs-e2e-skills-main/skills/testcontainers"
+```
+
 ## What this repository provides
 
 - Practical `SKILL.md` playbooks for common e2e testing scenarios.
