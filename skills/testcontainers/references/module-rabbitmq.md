@@ -58,3 +58,46 @@ const rabbit = await new RabbitMQContainer("rabbitmq:3.13-management")
 
 - Use non-durable test queues unless durability is the behavior under test.
 - Keep queue names deterministic to simplify assertions and cleanup.
+
+## Jest suite example
+
+```ts
+import { RabbitMQContainer, StartedRabbitMQContainer } from "@testcontainers/rabbitmq";
+import amqp, { Channel, ChannelModel } from "amqplib";
+
+describe("rabbitmq integration", () => {
+  let rabbit: StartedRabbitMQContainer;
+  let connection: ChannelModel;
+  let channel: Channel;
+
+  beforeAll(async () => {
+    rabbit = await new RabbitMQContainer("rabbitmq:3.13-management").start();
+    connection = await amqp.connect(rabbit.getAmqpUrl());
+    channel = await connection.createChannel();
+  });
+
+  afterAll(async () => {
+    await channel?.close();
+    await connection?.close();
+    await rabbit?.stop();
+  });
+
+  it("publishes and consumes queue message", async () => {
+    const queue = "suite-queue";
+    const payload = "hello-rabbit";
+
+    await channel.assertQueue(queue, { durable: false });
+    channel.sendToQueue(queue, Buffer.from(payload));
+
+    const consumed = await new Promise<string>((resolve) => {
+      channel.consume(
+        queue,
+        (message) => resolve(message?.content.toString() ?? ""),
+        { noAck: true }
+      );
+    });
+
+    expect(consumed).toBe(payload);
+  });
+});
+```

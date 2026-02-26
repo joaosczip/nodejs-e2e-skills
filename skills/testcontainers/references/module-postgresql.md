@@ -55,3 +55,40 @@ The PostgreSQL module supports snapshots (`snapshot()` and `restoreSnapshot()`) 
 
 - Do not use `postgres` as the test database name if you plan to use snapshots.
 - Keep connection env assignment before app bootstrap.
+
+## Jest suite example
+
+```ts
+import {
+  PostgreSqlContainer,
+  StartedPostgreSqlContainer,
+} from "@testcontainers/postgresql";
+import { Client } from "pg";
+
+describe("postgresql integration", () => {
+  let postgres: StartedPostgreSqlContainer;
+  let client: Client;
+
+  beforeAll(async () => {
+    postgres = await new PostgreSqlContainer("postgres:16-alpine")
+      .withDatabase("suite_db")
+      .withUsername("test")
+      .withPassword("test")
+      .start();
+
+    client = new Client({ connectionString: postgres.getConnectionUri() });
+    await client.connect();
+  });
+
+  afterAll(async () => {
+    await client?.end();
+    await postgres?.stop();
+  });
+
+  it("runs SQL and validates row content", async () => {
+    const result = await client.query("SELECT 1 AS ok");
+
+    expect(result.rows).toEqual([{ ok: 1 }]);
+  });
+});
+```

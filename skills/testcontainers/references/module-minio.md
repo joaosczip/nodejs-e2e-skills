@@ -50,3 +50,39 @@ const minio = await new MinioContainer("minio/minio:RELEASE.2024-08-03T04-33-23Z
 
 - MinIO is ideal for object-storage integration tests without AWS-specific APIs.
 - Use deterministic bucket/object names per suite to simplify cleanup and assertions.
+
+## Jest suite example
+
+```ts
+import { MinioContainer, StartedMinioContainer } from "@testcontainers/minio";
+import { Client } from "minio";
+
+describe("minio object storage", () => {
+  let minio: StartedMinioContainer;
+  let client: Client;
+
+  beforeAll(async () => {
+    minio = await new MinioContainer("minio/minio:RELEASE.2024-08-03T04-33-23Z").start();
+
+    client = new Client({
+      endPoint: minio.getHost(),
+      port: minio.getPort(),
+      useSSL: false,
+      accessKey: "minioadmin",
+      secretKey: "minioadmin",
+    });
+  });
+
+  afterAll(async () => {
+    await minio?.stop();
+  });
+
+  it("uploads and reads object metadata", async () => {
+    await client.makeBucket("suite-bucket");
+    await client.putObject("suite-bucket", "suite.txt", "suite-body");
+
+    const stat = await client.statObject("suite-bucket", "suite.txt");
+    expect(stat.size).toBeGreaterThan(0);
+  });
+});
+```

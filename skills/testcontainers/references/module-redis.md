@@ -50,3 +50,33 @@ expect(info).toContain("connected_clients");
 
 - Prefer `await client.quit()` over hard shutdown for cleaner teardown.
 - Use isolated key prefixes or `FLUSHDB` between tests when state leakage matters.
+
+## Jest suite example
+
+```ts
+import { RedisContainer, StartedRedisContainer } from "@testcontainers/redis";
+import { RedisClientType, createClient } from "redis";
+
+describe("redis integration", () => {
+  let redisContainer: StartedRedisContainer;
+  let client: RedisClientType;
+
+  beforeAll(async () => {
+    redisContainer = await new RedisContainer("redis:7.4-alpine").start();
+    client = createClient({ url: redisContainer.getConnectionUrl() });
+    await client.connect();
+  });
+
+  afterAll(async () => {
+    await client?.quit();
+    await redisContainer?.stop();
+  });
+
+  it("writes and reads keys from redis", async () => {
+    await client.set("suite:key", "value");
+
+    const value = await client.get("suite:key");
+    expect(value).toBe("value");
+  });
+});
+```

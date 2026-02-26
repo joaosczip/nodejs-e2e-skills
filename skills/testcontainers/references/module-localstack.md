@@ -55,3 +55,44 @@ process.env.AWS_SECRET_ACCESS_KEY = "test";
 - Prefer pinned images (`localstack/localstack:3.5`) for stable CI.
 - Keep `forcePathStyle: true` for S3-compatible local endpoints.
 - Stop the container in `afterAll` even if tests fail.
+
+## Jest suite example
+
+```ts
+import { LocalstackContainer, StartedLocalStackContainer } from "@testcontainers/localstack";
+import {
+  CreateBucketCommand,
+  HeadBucketCommand,
+  S3Client,
+} from "@aws-sdk/client-s3";
+
+describe("localstack S3 integration", () => {
+  let localstack: StartedLocalStackContainer;
+  let s3: S3Client;
+
+  beforeAll(async () => {
+    localstack = await new LocalstackContainer("localstack/localstack:3.5").start();
+
+    s3 = new S3Client({
+      endpoint: localstack.getConnectionUri(),
+      forcePathStyle: true,
+      region: "us-east-1",
+      credentials: {
+        accessKeyId: "test",
+        secretAccessKey: "test",
+      },
+    });
+  });
+
+  afterAll(async () => {
+    await localstack?.stop();
+  });
+
+  it("creates and reads bucket metadata", async () => {
+    await s3.send(new CreateBucketCommand({ Bucket: "suite-bucket" }));
+    const result = await s3.send(new HeadBucketCommand({ Bucket: "suite-bucket" }));
+
+    expect(result.$metadata.httpStatusCode).toBe(200);
+  });
+});
+```
