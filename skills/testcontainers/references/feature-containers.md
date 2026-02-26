@@ -54,3 +54,30 @@ await container.stop();
 - Use typed modules first; use `GenericContainer` for unsupported services or sidecars.
 - Keep teardown explicit in `afterAll`.
 - Avoid fixed host-port mappings unless unavoidable.
+
+## Jest suite example
+
+```ts
+import { GenericContainer, StartedTestContainer } from "testcontainers";
+
+describe("containers fundamentals", () => {
+  let container: StartedTestContainer;
+
+  beforeAll(async () => {
+    container = await new GenericContainer("alpine:3.20")
+      .withCommand(["sleep", "infinity"])
+      .start();
+  });
+
+  afterAll(async () => {
+    await container?.stop();
+  });
+
+  it("runs a command inside the container", async () => {
+    const result = await container.exec(["echo", "ok"]);
+
+    expect(result.exitCode).toBe(0);
+    expect(result.output.trim()).toBe("ok");
+  });
+});
+```

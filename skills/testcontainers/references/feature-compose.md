@@ -41,3 +41,38 @@ const environment = await new DockerComposeEnvironment("/path", "docker-compose.
 
 - `withWaitStrategy` uses container names (for example `postgres-1`), not service names.
 - Prefer module containers unless compose offers clear maintenance benefits.
+
+## Jest suite example
+
+```ts
+import {
+  DockerComposeEnvironment,
+  StartedDockerComposeEnvironment,
+  Wait,
+} from "testcontainers";
+
+describe("compose fundamentals", () => {
+  let environment: StartedDockerComposeEnvironment;
+
+  beforeAll(async () => {
+    environment = await new DockerComposeEnvironment(
+      "/absolute/path/to/fixtures/compose",
+      "docker-compose.yml"
+    )
+      .withWaitStrategy("redis-1", Wait.forLogMessage("Ready to accept connections"))
+      .up(["redis"]);
+  });
+
+  afterAll(async () => {
+    await environment?.down();
+  });
+
+  it("starts selected service and allows command execution", async () => {
+    const redis = environment.getContainer("redis-1");
+    const result = await redis.exec(["redis-cli", "PING"]);
+
+    expect(result.exitCode).toBe(0);
+    expect(result.output).toContain("PONG");
+  });
+});
+```

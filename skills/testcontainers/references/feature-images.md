@@ -38,3 +38,33 @@ With this set, Docker Hub pulls are rewritten to your mirror prefix.
 
 - Keep image tags explicit and stable.
 - Prefer prebuilt official module images unless custom behavior is required.
+
+## Jest suite example
+
+```ts
+import { GenericContainer, StartedGenericContainer } from "testcontainers";
+
+describe("images fundamentals", () => {
+  let container: StartedGenericContainer;
+
+  beforeAll(async () => {
+    const built = await GenericContainer.fromDockerfile(
+      "/absolute/path/to/fixtures/images",
+      "Dockerfile.test"
+    ).build("testcontainers-image-suite", { deleteOnExit: true });
+
+    container = await built.start();
+  });
+
+  afterAll(async () => {
+    await container?.stop();
+  });
+
+  it("starts the built image and executes a command", async () => {
+    const result = await container.exec(["sh", "-c", "echo image-ready"]);
+
+    expect(result.exitCode).toBe(0);
+    expect(result.output).toContain("image-ready");
+  });
+});
+```

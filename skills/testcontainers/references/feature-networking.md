@@ -52,3 +52,48 @@ expect(result.exitCode).toBe(0);
 
 - Prefer aliases on a custom network for container-to-container DNS.
 - Avoid relying on container IP addresses directly.
+
+## Jest suite example
+
+```ts
+import {
+  GenericContainer,
+  Network,
+  StartedNetwork,
+  StartedTestContainer,
+} from "testcontainers";
+
+describe("networking fundamentals", () => {
+  let network: StartedNetwork;
+  let redis: StartedTestContainer;
+  let client: StartedTestContainer;
+
+  beforeAll(async () => {
+    network = await new Network().start();
+
+    redis = await new GenericContainer("redis:7.4-alpine")
+      .withNetwork(network)
+      .withNetworkAliases("cache")
+      .withExposedPorts(6379)
+      .start();
+
+    client = await new GenericContainer("redis:7.4-alpine")
+      .withNetwork(network)
+      .withCommand(["sleep", "infinity"])
+      .start();
+  });
+
+  afterAll(async () => {
+    await client?.stop();
+    await redis?.stop();
+    await network?.stop();
+  });
+
+  it("connects to peer container using alias", async () => {
+    const result = await client.exec(["redis-cli", "-h", "cache", "PING"]);
+
+    expect(result.exitCode).toBe(0);
+    expect(result.output).toContain("PONG");
+  });
+});
+```

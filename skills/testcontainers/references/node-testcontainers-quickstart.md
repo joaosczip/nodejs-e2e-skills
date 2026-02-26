@@ -37,3 +37,40 @@ await container.stop();
 - Keep startup explicit in `beforeAll` and cleanup explicit in `afterAll`.
 - Avoid hidden global state; pass connection values through env/config visible in the test setup.
 - Keep data setup deterministic and reset state between tests when assertions depend on clean state.
+
+## Jest suite example
+
+```ts
+import {
+  PostgreSqlContainer,
+  StartedPostgreSqlContainer,
+} from "@testcontainers/postgresql";
+import { Client } from "pg";
+
+describe("quickstart lifecycle", () => {
+  let postgres: StartedPostgreSqlContainer;
+  let client: Client;
+
+  beforeAll(async () => {
+    postgres = await new PostgreSqlContainer("postgres:16-alpine")
+      .withDatabase("quickstart_db")
+      .withUsername("test")
+      .withPassword("test")
+      .start();
+
+    client = new Client({ connectionString: postgres.getConnectionUri() });
+    await client.connect();
+  });
+
+  afterAll(async () => {
+    await client?.end();
+    await postgres?.stop();
+  });
+
+  it("queries the started database", async () => {
+    const result = await client.query("SELECT 1 AS ok");
+
+    expect(result.rows).toEqual([{ ok: 1 }]);
+  });
+});
+```
